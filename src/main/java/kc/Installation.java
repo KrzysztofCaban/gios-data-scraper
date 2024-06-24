@@ -9,6 +9,14 @@ public class Installation {
         this.paramCode = paramCode;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public String getParamCode() {
+        return paramCode;
+    }
+
     @Override
     public String toString() {
         return "installation #" + id + ": '" + paramCode + "'";

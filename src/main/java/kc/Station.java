@@ -13,6 +13,18 @@ public class Station {
         this.installations = installations;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<Installation> getInstallations() {
+        return installations;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -22,4 +34,5 @@ public class Station {
         }
         return sb.toString();
     }
+
 }
