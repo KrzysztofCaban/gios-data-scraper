@@ -1,10 +1,12 @@
 package kc;
 
+import java.net.http.HttpClient;
 import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        APIHandler apiHandler = new APIHandler();
+        HttpClient client = HttpClient.newHttpClient();
+        APIHandler apiHandler = new APIHandler(client);
         List<Station> stations = apiHandler.getAllStations();
 
         if (stations.isEmpty()) {

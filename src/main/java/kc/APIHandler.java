@@ -25,8 +25,8 @@ public class APIHandler {
     private static final long RETRY_DELAY_MS = 3000;
     private HttpClient client;
 
-    public APIHandler() {
-        this.client = HttpClient.newHttpClient();
+    public APIHandler(HttpClient client) {
+        this.client = client;
     }
 
     public List<Station> getAllStations() {
