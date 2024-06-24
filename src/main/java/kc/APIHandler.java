@@ -11,9 +11,10 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class APIHandler {
-    private static final String STATIONS_ENDPOINT = "http://api.gios.gov.pl/pjp-api/rest/station/findAlle";
+    private static final String STATIONS_ENDPOINT = "http://api.gios.gov.pl/pjp-api/rest/station/findAll";
     private static final String INSTALLATIONS_ENDPOINT = "http://api.gios.gov.pl/pjp-api/rest/station/sensors/";
     private static final String ID_KEY = "id";
     private static final String STATION_NAME_KEY = "stationName";
@@ -39,39 +40,52 @@ public class APIHandler {
         }
     }
 
-    private List<Installation> createInstallationsFromJson(JSONArray installationsArray) {
-        List<Installation> installationList = new ArrayList<>();
-        for (int i = 0; i < installationsArray.length(); i++) {
-            installationList.add(createInstallationFromJson(installationsArray.getJSONObject(i)));
-        }
-        return installationList;
-    }
-
-    private List<Station> createStationsFromJson(JSONArray stationsArray) throws Exception {
+    private List<Station> createStationsFromJson(JSONArray stationsArray) {
         List<Station> stationList = new ArrayList<>();
         for (int i = 0; i < stationsArray.length(); i++) {
-            stationList.add(createStationFromJson(stationsArray.getJSONObject(i)));
+            createStationFromJson(stationsArray.getJSONObject(i)).ifPresent(stationList::add);
         }
         return stationList;
     }
 
-    private Station createStationFromJson(JSONObject stationObject) throws Exception {
-        int id = stationObject.getInt(ID_KEY);
-        String name = stationObject.getString(STATION_NAME_KEY);
-        List<Installation> installations = getInstallationsForStation(id);
-        return new Station(id, name, installations);
+    private Optional<Station> createStationFromJson(JSONObject stationObject) {
+        try {
+            int id = stationObject.getInt(ID_KEY);
+            String name = stationObject.getString(STATION_NAME_KEY);
+            List<Installation> installations = getInstallationsForStation(id);
+            return Optional.of(new Station(id, name, installations));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
-    private Installation createInstallationFromJson(JSONObject installationObject) {
-        int id = installationObject.getInt(ID_KEY);
-        String paramCode = installationObject.getJSONObject(PARAM_KEY).getString(PARAM_CODE_KEY);
-        return new Installation(id, paramCode);
+    public List<Installation> getInstallationsForStation(int stationId) {
+        try {
+            HttpRequest request = createRequest(INSTALLATIONS_ENDPOINT + stationId);
+            JSONArray installations = sendRequestAndGetResponse(request);
+            return createInstallationsFromJson(installations);
+        } catch (Exception e) {
+            System.out.println("An error occurred: " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
 
-    public List<Installation> getInstallationsForStation(int stationId) throws Exception {
-        HttpRequest request = createRequest(INSTALLATIONS_ENDPOINT + stationId);
-        JSONArray installations = sendRequestAndGetResponse(request);
-        return createInstallationsFromJson(installations);
+    private List<Installation> createInstallationsFromJson(JSONArray installationsArray) {
+        List<Installation> installationList = new ArrayList<>();
+        for (int i = 0; i < installationsArray.length(); i++) {
+            createInstallationFromJson(installationsArray.getJSONObject(i)).ifPresent(installationList::add);
+        }
+        return installationList;
+    }
+
+    private Optional<Installation> createInstallationFromJson(JSONObject installationObject) {
+        try {
+            int id = installationObject.getInt(ID_KEY);
+            String paramCode = installationObject.getJSONObject(PARAM_KEY).getString(PARAM_CODE_KEY);
+            return Optional.of(new Installation(id, paramCode));
+        } catch (JSONException e) {
+            return Optional.empty();
+        }
     }
 
     private HttpRequest createRequest(String endpoint) {
@@ -80,7 +94,7 @@ public class APIHandler {
                 .build();
     }
 
-    private JSONArray sendRequestAndGetResponse(HttpRequest request) throws IOException, InterruptedException {
+    private JSONArray sendRequestAndGetResponse(HttpRequest request) throws IOException, InterruptedException, JSONException {
         int retries = 0;
         while (true) {
             try {
