@@ -12,7 +12,7 @@ GIOS Data Scraper to projekt napisany w Javie, który korzysta z API GIOS (Głó
 
 ## Wymagania
 
-- Java 8 lub nowsza
+- Java 11 lub nowsza
 - Maven
 
 ## Jak uruchomić
